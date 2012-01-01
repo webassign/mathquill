@@ -1,0 +1,6 @@
+[submodule "test/support/chai"]
+	path = test/support/chai
+	url = git://github.com/logicalparadox/chai
+[submodule "test/support/mocha"]
+	path = test/support/mocha
+	url = git://github.com/visionmedia/mocha

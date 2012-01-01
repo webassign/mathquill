@@ -4,11 +4,11 @@ OUTRO = $(SRC_DIR)/outro.js
 
 SOURCES = \
 	$(SRC_DIR)/tree.js \
-	$(SRC_DIR)/roots.js \
-	$(SRC_DIR)/commands.js \
-	$(SRC_DIR)/symbols.js \
-	$(SRC_DIR)/cursor.js \
-	$(SRC_DIR)/public.js
+	# $(SRC_DIR)/roots.js \
+	# $(SRC_DIR)/commands.js \
+	# $(SRC_DIR)/symbols.js \
+	# $(SRC_DIR)/cursor.js \
+	# $(SRC_DIR)/public.js
 
 SOURCE_CSS = $(SRC_DIR)/mathquill.css
 
@@ -46,6 +46,19 @@ $(UGLY_JS): $(BUILD_JS)
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
+
+# -*- Test tasks -*- #
+UNIT_TESTS = ./test/unit/*.test.js
+BUILD_TEST = $(BUILD_DIR)/mathquill.test.js
+
+# NB: the unit tests get cat'ed inside the mathquill closure.
+# that way they can test internal functionality.
+$(BUILD_TEST): $(SOURCES) $(UNIT_TESTS) $(INTRO) $(OUTRO)
+	cat $(INTRO) $(SOURCES) $(UNIT_TESTS) $(OUTRO) > $(BUILD_TEST)
+
+.PHONY: test
+test: css $(BUILD_TEST)
+	@echo "now open test/test.html in your browser to run the tests." >/dev/stderr
 
 # -*- Publishing tasks -*- #
 .PHONY: publish
