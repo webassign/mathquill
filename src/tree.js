@@ -165,8 +165,20 @@ var Range = Class(function(range) {
     //to its former parent and siblings
     //
     // [Jay] TODO: figure out how to do this with setNext and setPrev
-    var prev = this.first.prev, next = this.last.next;
-    return siblingify(this, this.first.parent, prev, next, next, prev);
+    var self = this
+      , first = this.first
+      , last = this.last
+    ;
+
+    if (first.prev) first.prev.setNext(last.next);
+    if (last.next)  last.next.setPrev(first.prev);
+
+    // edge case: single-child parent
+    if (!first.prev && !last.next) {
+      self.parent.firstChild = self.parent.lastChild = 0;
+    }
+
+    return this;
   };
 
   range.adopt = function(parent, prev, next) {
@@ -182,5 +194,7 @@ var Range = Class(function(range) {
     self.each(function(e) { e.parent = parent });
     first.setPrev(prev);
     last.setNext(next);
+
+    return self;
   };
 });
