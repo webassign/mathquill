@@ -1,14 +1,14 @@
 suite('Interstice', function() {
-  var interstice = create(Interstice);
+  var interstice = Interstice();
 
   test('is an interstice', function() {
     assert.instanceOf(interstice, Interstice);
   });
 
   test('#insertBefore', function() {
-    var parent = create(Node)
-      , one = create(Node)
-      , two = create(Node)
+    var parent = Node()
+      , one = Node()
+      , two = Node()
     ;
 
     parent.append(one).append(two)
@@ -21,9 +21,9 @@ suite('Interstice', function() {
   });
 
   test('#insertAfter', function() {
-    var parent = create(Node)
-      , one = create(Node)
-      , two = create(Node)
+    var parent = Node()
+      , one = Node()
+      , two = Node()
     ;
 
     parent.append(one).append(two)
@@ -36,8 +36,8 @@ suite('Interstice', function() {
   });
 
   test('#appendTo', function() {
-    var parent = create(Node)
-      , child = create(Node)
+    var parent = Node()
+      , child = Node()
     ;
 
     parent.append(child);
@@ -54,8 +54,8 @@ suite('Interstice', function() {
   });
 
   test('#prependTo', function() {
-    var parent = create(Node)
-      , child = create(Node)
+    var parent = Node()
+      , child = Node()
     ;
 
     parent.append(child);
