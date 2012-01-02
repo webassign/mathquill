@@ -77,7 +77,15 @@ var Node = Class(function(node) {
     else {
       self.parent.firstChild = self;
     }
-  }
+  };
+
+  node.insertAfter = function(e) { return this.adopt(e.parent, e, e.next); };
+  node.insertBefore = function(e) { return this.adopt(e.parent, e.prev, e); };
+
+  node.appendTo  = function(e) { return this.adopt(e, e.lastChild, 0); };
+  node.prependTo = function(e) { return this.adopt(e, 0, e.firstChild); };
+  node.append  = function(e) { e.appendTo(this); return this; };
+  node.prepend = function(e) { e.prependTo(this); return this; };
 });
 
 /**
