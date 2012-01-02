@@ -105,6 +105,29 @@ var Interstice = Class(function(interstice) {
   interstice.insertAfter = function(el) {
     return this.insertAt(el.parent, el, el.next);
   };
+
+  interstice.appendTo = function(parent) {
+    return this.insertAt(parent, parent.lastChild, 0);
+  };
+
+  interstice.prependTo = function(parent) {
+    return this.insertAt(parent, 0, parent.firstChild);
+  };
+
+  interstice.append = function(el) {
+    replaceWithElement(this, el);
+    return this.insertAfter(el);
+  };
+
+  interstice.prepend = function(el) {
+    replaceWithElement(this, el);
+    return this.insertBefore(el);
+  };
+
+  // @private
+  function replaceWithElement(self, el) {
+    el.adopt(self.parent, self.prev, self.next);
+  }
 });
 
 /**
