@@ -37,6 +37,11 @@ var Node = Class(function(node) {
     if (self.prev) self.prev.setNext(self.next);
     if (self.next) self.next.setPrev(self.prev);
 
+    // handle the edge case of a node by itself
+    if(!self.prev && !self.next) {
+      self.parent.firstChild = self.parent.lastChild = 0;
+    }
+
     return self;
   };
 
@@ -44,7 +49,9 @@ var Node = Class(function(node) {
     this.parent = parent;
     this.setPrev(prev);
     this.setNext(next);
-  }
+
+    return this;
+  };
 
   //util subroutine
   //links siblings' or parent pointers
@@ -58,7 +65,7 @@ var Node = Class(function(node) {
     else {
       self.parent.lastChild = self;
     }
-  }
+  };
 
   node.setPrev = function(prev) {
     var self = this;
