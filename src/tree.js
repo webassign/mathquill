@@ -163,8 +163,8 @@ var Range = Class(function(range) {
   };
 
   range.map = function(fn) {
-    var out = [], i = 0;
-    this.each(function(e) { out[i] = fn.call(this, e); i += 1; });
+    var out = [];
+    this.each(function(e) { out.push(fn.call(this, e)); });
 
     return out;
   }
