@@ -12,9 +12,6 @@
 
     <!-- mocha test framework -->
     <script type="text/javascript" src="support/mocha/mocha.js"></script>
-    <script type="text/javascript">
-      mocha.setup('tdd');
-    </script>
     <link rel="stylesheet" type="text/css" href="support/mocha/mocha.css" />
 
     <!-- chai for assertions -->
@@ -26,8 +23,8 @@
   </head>
 
   <body>
+    <h1>Unit Tests</h1>
     <div id="mocha">
-      <canvas></canvas>
     </div>
 
     <script type="text/javascript"> mocha.run(); </script>

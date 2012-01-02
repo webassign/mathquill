@@ -50,12 +50,13 @@ $(BUILD_DIR):
 
 # -*- Test tasks -*- #
 UNIT_TESTS = ./test/unit/*.test.js
+TEST_INTRO = ./test/unit/intro.js
 BUILD_TEST = $(BUILD_DIR)/mathquill.test.js
 
 # NB: the unit tests get cat'ed inside the mathquill closure.
 # that way they can test internal functionality.
 $(BUILD_TEST): $(SOURCES) $(UNIT_TESTS) $(INTRO) $(OUTRO)
-	cat $(INTRO) $(SOURCES) $(UNIT_TESTS) $(OUTRO) > $(BUILD_TEST)
+	cat $(INTRO) $(SOURCES) $(TEST_INTRO) $(UNIT_TESTS) $(OUTRO) > $(BUILD_TEST)
 
 .PHONY: test
 test: css $(BUILD_TEST)
