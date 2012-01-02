@@ -153,11 +153,21 @@ var Range = Class(function(range) {
   range.first = range.last = 0;
 
   range.each = function(fn) {
-    for (var el = this.first; el !== this.last.next; el = el.next)
-      if (fn.call(this, el) === false) break;
+    for (var el = this.first; el !== this.last.next; el = el.next) {
+      try { fn.call(this, el); } catch(e) {
+        if (e === 'break') break; else throw e;
+      }
+    }
 
     return this;
   };
+
+  range.map = function(fn) {
+    var out = [], i = 0;
+    this.each(function(e) { out[i] = fn.call(this, e); i += 1; });
+
+    return out;
+  }
 
   range.fold = function(fold, fn) {
     this.each(function(el) {
