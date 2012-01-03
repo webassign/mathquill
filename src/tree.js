@@ -122,12 +122,12 @@ var Interstice = P(function(interstice) {
     return this.insertAt(parent, 0, parent.firstChild);
   };
 
-  interstice.append = function(el) {
+  interstice.after = function(el) {
     replaceWithElement(this, el);
     return this.insertAfter(el);
   };
 
-  interstice.prepend = function(el) {
+  interstice.before = function(el) {
     replaceWithElement(this, el);
     return this.insertBefore(el);
   };
