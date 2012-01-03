@@ -181,8 +181,6 @@ var Range = Class(function(range) {
     //Like Node::disown, relinks them around us,
     //tree remains well-formed, but this node still points
     //to its former parent and siblings
-    //
-    // [Jay] TODO: figure out how to do this with setNext and setPrev
     var self = this
       , first = this.first
       , last = this.last
