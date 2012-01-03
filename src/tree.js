@@ -7,7 +7,7 @@
  * Node is the core virtual DOM tree node base class.
  * All other classes of tree nodes descend from it.
  */
-var Node = Class(function(node) {
+var Node = P(function(node) {
   node.parent =
   node.prev =
   node.next =
@@ -94,7 +94,7 @@ var Node = Class(function(node) {
  * Not actually part of the tree, a view of an interstice
  * with one-way pointers to relevant nodes.
  */
-var Interstice = Class(function(interstice) {
+var Interstice = P(function(interstice) {
   interstice.parent =
   interstice.prev =
   interstice.next = 0;
@@ -143,7 +143,7 @@ var Interstice = Class(function(interstice) {
  * Not actually part of the tree, a view of a group of nodes
  * with one-way pointers to relevant nodes.
  */
-var Range = Class(function(range) {
+var Range = P(function(range) {
   range.init = function(first, last) {
     if (!arguments.length) return;
     this.first = first;

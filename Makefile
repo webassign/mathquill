@@ -3,7 +3,7 @@ INTRO = $(SRC_DIR)/intro.js
 OUTRO = $(SRC_DIR)/outro.js
 
 SOURCES = \
-	$(SRC_DIR)/class.js \
+	$(SRC_DIR)/vendor/pjs/src/p.js \
 	$(SRC_DIR)/tree.js \
 	# $(SRC_DIR)/roots.js \
 	# $(SRC_DIR)/commands.js \
