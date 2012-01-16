@@ -16,7 +16,7 @@ var Node = P(function(node) {
   0;
 
   node.children = function() {
-    return new Range(this.firstChild, this.lastChild);
+    return Range(this.firstChild, this.lastChild);
   };
 
   node.bubble = function(event, arg) {
