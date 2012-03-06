@@ -1,6 +1,8 @@
-.*.swp
-.*.swo
-.*.swn
+# build artifacts
 build/*
-.DS_Store
+
+# tmp dir
 tmp/*
+
+# npm
+/node_modules/
