@@ -65,6 +65,20 @@ var Node = P(function(node) {
     return this;
   };
 
+  node.appendChild = function(child) {
+    child.reset();
+    Interstice(this, this.lastChild, child).link();
+    this.lastChild = child;
+    return this;
+  };
+
+  node.prependChild = function(child) {
+    child.reset();
+    Interstice(this, child, this.firstChild).link();
+    this.firstChild = child;
+    return this;
+  };
+
   node.insertAfter = function(e) { return this.adopt(e.parent, e, e.next); };
   node.insertBefore = function(e) { return this.adopt(e.parent, e.prev, e); };
 
