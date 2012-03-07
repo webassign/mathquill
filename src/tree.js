@@ -145,7 +145,6 @@ var Interstice = P(function(interstice) {
  */
 var Range = P(function(range) {
   range.init = function(first, last) {
-    if (!arguments.length) return;
     this.first = first;
     this.last = last || first; //if only one argument, group of one
   };
