@@ -221,6 +221,9 @@ var Range = P(function(range) {
     ;
 
     self.each(function(e) { e.parent = parent });
+    // this will break if undefined.
+    // Is there such a thing as an empty Range?  Or is that an Interstice?
+    // perhaps it would make sense if a Range consisted of two Interstices?
     first.setPrev(prev);
     last.setNext(next);
 
