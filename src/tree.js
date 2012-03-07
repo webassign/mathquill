@@ -8,12 +8,18 @@
  * All other classes of tree nodes descend from it.
  */
 var Node = P(function(node) {
-  node.parent =
-  node.prev =
-  node.next =
-  node.firstChild =
-  node.lastChild =
-  0;
+  node.reset = function() {
+    var self = this;
+    self.parent =
+    self.prev =
+    self.next =
+    self.firstChild =
+    self.lastChild =
+    0;
+  };
+
+  // set the defaults on the prototype
+  node.reset();
 
   node.children = function() {
     return Range(this.firstChild, this.lastChild);
