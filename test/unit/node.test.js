@@ -2,7 +2,6 @@ suite('Node', function() {
   var node;
 
   setup(function() {
-    window.thing = this;
     node = Node();
   });
 
