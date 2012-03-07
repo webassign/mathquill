@@ -34,13 +34,7 @@ var Node = P(function(node) {
     //to its former parent and siblings
 
     var self = this;
-    if (self.prev) self.prev.setNext(self.next);
-    if (self.next) self.next.setPrev(self.prev);
-
-    // handle the edge case of a node by itself
-    if(!self.prev && !self.next) {
-      self.parent.firstChild = self.parent.lastChild = 0;
-    }
+    Interstice(self.parent, self.prev, self.next).link();
 
     return self;
   };
@@ -56,27 +50,13 @@ var Node = P(function(node) {
   //util subroutine
   //links siblings' or parent pointers
   node.setNext = function(next) {
-    var self = this;
-
-    self.next = next;
-    if (next) {
-      next.prev = self;
-    }
-    else {
-      self.parent.lastChild = self;
-    }
+    Interstice(this.parent, this, next).link();
+    return this;
   };
 
   node.setPrev = function(prev) {
-    var self = this;
-
-    self.prev = prev;
-    if (prev) {
-      prev.next = self;
-    }
-    else {
-      self.parent.firstChild = self;
-    }
+    Interstice(this.parent, prev, this).link();
+    return this;
   };
 
   node.insertAfter = function(e) { return this.adopt(e.parent, e, e.next); };
@@ -99,7 +79,7 @@ var Interstice = P(function(interstice) {
   interstice.prev =
   interstice.next = 0;
 
-  interstice.insertAt = function(parent, prev, next) {
+  interstice.init = interstice.insertAt = function(parent, prev, next) {
     this.parent = parent;
     this.prev = prev;
     this.next = next;
@@ -130,6 +110,26 @@ var Interstice = P(function(interstice) {
   interstice.before = function(el) {
     replaceWithElement(this, el);
     return this.insertBefore(el);
+  };
+
+  interstice.link = function() {
+    if (this.prev) {
+      this.prev.next = this.next;
+      this.prev.parent = this.parent;
+    }
+    else {
+      this.parent.firstChild = this.next;
+    }
+
+    if (this.next) {
+      this.next.prev = this.prev;
+      this.next.parent = this.parent;
+    }
+    else {
+      this.parent.lastChild = this.prev;
+    }
+
+    return this;
   };
 
   // @private
@@ -186,13 +186,7 @@ var Range = P(function(range) {
       , last = this.last
     ;
 
-    if (first.prev) first.prev.setNext(last.next);
-    if (last.next)  last.next.setPrev(first.prev);
-
-    // edge case: single-child parent
-    if (!first.prev && !last.next) {
-      self.parent.firstChild = self.parent.lastChild = 0;
-    }
+    Interstice(self.parent, first.prev, last.next).link();
 
     return this;
   };
