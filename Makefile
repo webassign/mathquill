@@ -5,11 +5,6 @@ OUTRO = $(SRC_DIR)/outro.js
 SOURCES = \
 	$(SRC_DIR)/vendor/pjs/src/p.js \
 	$(SRC_DIR)/tree.js \
-	# $(SRC_DIR)/roots.js \
-	# $(SRC_DIR)/commands.js \
-	# $(SRC_DIR)/symbols.js \
-	# $(SRC_DIR)/cursor.js \
-	# $(SRC_DIR)/public.js
 
 CSS_DIR = $(SRC_DIR)/css
 CSS_MAIN = $(CSS_DIR)/main.less
