@@ -167,7 +167,7 @@ var Range = P(function(range) {
     this.each(function(e) { out.push(fn.call(this, e)); });
 
     return out;
-  }
+  };
 
   range.fold = function(fold, fn) {
     this.each(function(el) {
