@@ -11,13 +11,15 @@ SOURCES = \
 	# $(SRC_DIR)/cursor.js \
 	# $(SRC_DIR)/public.js
 
-SOURCE_CSS = $(SRC_DIR)/mathquill.css
+CSS_DIR = $(SRC_DIR)/css
+CSS_MAIN = $(CSS_DIR)/main.less
+CSS_SOURCES = $(CSS_DIR)/*.less
 
 BUILD_DIR = ./build
 BUILD_JS = $(BUILD_DIR)/mathquill.js
 BUILD_CSS = $(BUILD_DIR)/mathquill.css
 UGLY_JS = $(BUILD_DIR)/mathquill.min.js
-CLEAN += $(BUILD_DIR)
+CLEAN += $(BUILD_JS) $(BUILD_CSS) $(UGLY_JS)
 
 # -*- Build tasks -*- #
 .PHONY: all
@@ -28,7 +30,7 @@ uglify: $(UGLY_JS)
 
 .PHONY: clean
 clean:
-	rm -r $(CLEAN)
+	rm -rf $(CLEAN)
 
 .PHONY: js
 js: $(BUILD_JS) $(BUILD_CSS)
@@ -36,17 +38,20 @@ js: $(BUILD_JS) $(BUILD_CSS)
 .PHONY: css
 css: $(BUILD_CSS)
 
-$(BUILD_JS): $(BUILD_DIR) $(SOURCES) $(INTRO) $(OUTRO)
+$(BUILD_JS): $(SOURCES) $(INTRO) $(OUTRO)
 	cat $(INTRO) $(SOURCES) $(OUTRO) > $(BUILD_JS)
 
-$(BUILD_CSS): $(BUILD_DIR) $(SOURCE_CSS)
-	cp $(SOURCE_CSS) $(BUILD_CSS)
+# pass DEV=1 to get a cleaner CSS output
+ifeq ($(DEV), 1)
+LESS_OPTS =
+else
+LESS_OPTS = -x
+endif
+$(BUILD_CSS): $(CSS_SOURCES)
+	lessc $(LESS_OPTS) $(CSS_MAIN) > $@
 
 $(UGLY_JS): $(BUILD_JS)
 	uglifyjs $(BUILD_JS) > $(UGLY_JS)
-
-$(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
 
 # -*- Test tasks -*- #
 UNIT_TESTS = ./test/unit/*.test.js

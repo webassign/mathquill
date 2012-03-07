@@ -3,6 +3,7 @@
   "version": "0.5.0",
   "devDependencies": {
     "mocha": "*",
-    "uglify-js": "*"
+    "uglify-js": "*",
+    "less": "*"
   }
 }

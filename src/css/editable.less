@@ -1,0 +1,88 @@
+// vim: ft=less
+@import "mixins/font";
+
+.mathquill-editable {
+  .mathquill-embedded-latex .mathquill-editable {
+    border: 1px solid gray;
+    padding: 2px;
+  }
+}
+
+.mathquill-embedded-latex {
+  // hidden textarea
+  .textarea {
+    position: relative;
+    .user-select(text);
+  }
+
+  .textarea textarea, .selectable {
+    position: absolute;
+    z-index: -1;
+    height: 1px;
+    width: 1px;
+    opacity: 0;
+    border: none;
+    outline: none;
+    overflow: hidden;
+    .user-select(text);
+  }
+
+  .mathquill-editable {
+    margin: 1px;
+
+    .cursor {
+      border-left: 1px solid black;
+      margin-right: -1px;
+      position: relative;
+      z-index: 1;
+
+      &.blink { visibility: hidden; }
+    }
+  }
+
+  .mathquill-textbox {
+    overflow-x: auto;
+    // so IE8 won't show a vertical scrollbar
+    overflow-y: hidden;
+  }
+
+  .after-content () {
+    &:after {
+      visibility: hidden;
+      content: 'c';
+    }
+  }
+
+  .matqhuill-editable, .mathquill-textbox, .empty {
+    .after-content;
+  }
+
+  // separated from above because unrecognized
+  // pseudoclasses invalidate the entire selector
+  .mathquill-editable {
+    .cursor:only-child, .textarea + .cursor:last-child {
+      .after-content;
+    }
+  }
+
+  // selections
+  .selection * {
+    background: #B4D5FE;
+    background: Highlight;
+    color: HighlightText;
+    border-color: HighlightText;
+
+    &.blur * {
+      background: #D4D4D4;
+      color: black;
+      border-color: black;
+
+      .selection.blur * {
+        background: #AAA;
+        background: rgba(0, 0, 0, .15);
+      }
+    }
+
+    .selection.blur * { background: #ABF; }
+  }
+}
