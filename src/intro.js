@@ -26,36 +26,56 @@ var $ = jQuery,
  * Example blatantly stolen from http://www.yuiblog.com/blog/2006/04/11/with-statement-considered-harmful/
  */
 
-/**
- * simple sugar for idiomatic JS classes
- * Usage:
- *  var Cat = _class(new Animal, function(furriness) {
- *    this.furriness = furriness;
- *    this.adorableness = furriness/10;
- *  });
- *  _.play = function(){ this.chase('mouse'); };
+/** simple sugar for idiomatic JS classes:
+ * (If you don't know how prototypes work in JavaScript, see http://github.com/laughinghan/mathquill/wiki/Prototype-based-Inheritance-in-JavaScript .)
+ * Idiomatic classes in JS are just a constructor and a prototype,
+ * this is some simple sugar to do that with a little less typing.
+ * Instead of
+ *    function Cat(furriness) {
+ *      this.furriness = furriness;
+ *      this.adorableness = furriness/10;
+ *    }
+ *    _ = Cat.prototype = new Animal;
+ *    _.play = function(){ this.chase('mouse'); };
+ * just do
+ *    var Cat = _class(new Animal, function(furriness) {
+ *      this.furriness = furriness;
+ *      this.adorableness = furriness/10;
+ *    });
+ *    _.play = function(){ this.chase('mouse'); };
+ * The constructor is actually optional, if you just want a class
+ * that inherits from a prototype.
+ * Instead of
+ *    function Animal(){}
+ *    _ = Animal.prototype;
+ *    _.chase = function(prey) ...
+ * just do
+ *    var Animal = _class({});
+ *    _.chase = function(prey) ...
  */
 function _class(prototype, constructor) {
   if (!constructor) constructor = function(){};
   _ = constructor.prototype = prototype;
   return constructor;
 }
-
-/**
- * more sugar, for classes without a pre-supplied prototype
- * Usage:
- *  var Animal = _baseclass();
- *  _.chase = function(prey) ...
+/* There's actually sugar to make that common case even simpler:
+ *     var Animal = _baseclass();
+ *     _.chase = function(prey) ...
  */
 function _baseclass(constructor) {
   return _class({}, constructor);
 }
-
-/**
- * sugar specifically for copying the constructor
- * Usage:
- *  var HouseCat = _subclass(Cat);
- *  _.play = function(){ this.chase('yarn'); };
+/* There's also sugar for the common case of wanting to
+ * "inherit" the superclass constructor:
+ * Instead of
+ *    function HouseCat() {
+ *      Cat.apply(this, arguments);
+ *    }
+ +    _ = HouseCat.prototype = new Cat;
+ *    _.play = function(){ this.chase('yarn'); };
+ * just do
+ *    var HouseCat = _subclass(Cat);
+ *    _.play = function(){ this.chase('yarn'); };
  */
 function _subclass(superclass) {
   return _class(new superclass, function(){
