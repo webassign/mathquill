@@ -9,10 +9,22 @@
 
 var $ = jQuery,
   undefined,
-  _, //temp variable of prototypes
+  _, //temp variable for multiple assignment to objects
   jQueryDataKey = '[[mathquill internal data]]',
   min = Math.min,
   max = Math.max;
+
+/** Usage of '_':
+ * temp variable for multiple assignment to objects
+ * Instead of
+ *  ooo.eee.oo.ah_ah.ting.tang.walla.walla.bing = true;
+ *  ooo.eee.oo.ah_ah.ting.tang.walla.walla.bang = true;
+ * you can just write
+ *  _ = ooo.eee.oo.ah_ah.ting.tang.walla.walla;
+ *  _.bing = true;
+ *  _.bang = true;
+ * Example blatantly stolen from http://www.yuiblog.com/blog/2006/04/11/with-statement-considered-harmful/
+ */
 
 /**
  * simple sugar for idiomatic JS classes
