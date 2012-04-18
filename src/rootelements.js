@@ -23,7 +23,7 @@ function createRoot(jQ, root, textbox, editable) {
   root.renderLatex(contents.text());
 
   //textarea stuff
-  var textareaSpan = root.textarea = $('<span class="textarea"><textarea></textarea></span>'),
+  var textareaSpan = root.textarea = $('<span class="textarea"><textarea autocomplete="off" autocapitalize="none"></textarea></span>'),
     textarea = textareaSpan.children();
 
   /******
@@ -239,10 +239,95 @@ function createRoot(jQ, root, textbox, editable) {
       for (var i = 0; i < text.length; i += 1) {
         cursor.parent.textInput(text.charAt(i));
       }
+      checkKeywords();
+      checkTrig();
     }
     else {
       if (cursor.selection || textareaSelectionTimeout !== undefined)
         setTextareaSelection();
+    }
+  }
+  
+  /**
+   * Converts existing trig methods into their respective arc and hyperbolic versions
+   * when a user types an 'a' or 'h'
+   */
+  function checkTrig() {
+  	var prev = cursor.prev.prev;
+  	var next = cursor.next;
+  	if ( prev && cursor.prev.cmd == 'h' && prev.jQ.hasClass('trig') && !prev.cmd.match(/h$/) ) {
+  		cursor.backspace().backspace().writeLatex(prev.cmd + 'h').show();
+  	}
+  	else if ( next && cursor.prev.cmd == 'a' && next.jQ.hasClass('trig') && !next.cmd.match(/^a/) ) {
+  		cursor.backspace().deleteForward().writeLatex('\\a' + next.cmd.substr(1)).show();
+  	}
+  }
+  
+  /**
+     * Analyzes the characters surrounding the cursor to check if any keywords can be substituted
+     */
+  function checkKeywords() {
+    var prefix = '',
+        suffix = '',
+        c      = cursor;
+    // do not apply keywords when within a latex command input element
+    if( cursor.parent && cursor.parent.jQ.hasClass('latex-command-input') ) {
+        return;
+    }
+    
+    // from the current cursor position, gather all preceding characters in the expression
+    // until we reach a non-character ( frac, sqrt, sub, greek, etc )
+    while( prefix.length < MAX_KEYWORD_LENGTH && c.prev && c.prev.cmd.length == 1 ) {
+      prefix = c.prev.cmd + prefix;
+      c = c.prev;
+    }
+    // from the current cursor position, gather all following characters in the expression
+    // until we reach a non-character 
+    c = cursor;
+    while( suffix.length < MAX_KEYWORD_LENGTH-1 && c.next && c.next.cmd.length == 1 ) {
+      suffix += c.next.cmd;
+      c = c.next;
+    }
+     
+    var search = prefix + suffix; 
+    // loop over the keywords ( should be sorted in ascending length order ) and check the search string
+    // against the keywords.
+    for( var i = Keywords.length; --i >= 0; ) {
+      var keyword = Keywords[i];
+      // if the search string is shorter than the keyword, we can stop looking
+      if( keyword.cmd.length > search.length ) return;
+      
+      // check for the index of the keyword in the search string
+      var start = search.indexOf( keyword.cmd );
+      
+      // start should be a positive number if the keyword was found in the search string
+      if( start >= 0 ) {
+        var skip = false;
+        // the current keyword might be a substring of a longer keyword that is in progress,
+        // if so we should skip the keyword until the user has entered more data
+        for( var j = i; --j >= 0; ) {
+        	// see the current keyword is a substring of any longer keywords
+            var conflict = Keywords[j].cmd.indexOf(keyword.cmd);
+            // if the short keyword is a part of the longer keyword and the characters from 0 to matched-index are
+            // also present in the user input, then we should NOT use the shorter keyword.  
+            if( conflict >= 1 && search.indexOf( Keywords[j].cmd.substr(0, conflict + keyword.cmd.length ) ) >= 0 ) {
+                skip = true;
+            }
+        }
+        if( skip ) continue;
+        // move the cursor to the beginning of the keyword
+        for( var j = prefix.length-start; --j >= 0; ) {
+          cursor.moveLeft();
+        }
+        // select as many characters as there are in the keyword
+        for( var j = 0; j < keyword.cmd.length; j++ ) {
+          cursor.selectRight();
+        }
+        // overwrite the keyword with the latex of the keyword
+        cursor.writeLatex(keyword.latex).show();
+      
+        break;
+      }
     }
   }
 }

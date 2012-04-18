@@ -201,7 +201,7 @@ _.offset = function() {
 };
 _.writeLatex = function(latex) {
   this.deleteSelection();
-  latex = ( latex && latex.match(/\\text\{([^}]|\\\})*\}|\\[a-z]*|[^\s]/ig) ) || 0;
+  latex = ( latex && latex.match(/\\text\{([^}]|\\\})*\}|\\[a-z]*|&#[0-9]+;|&[a-zA-Z]+;|[^\s]/ig) ) || 0;
   (function writeLatexBlock(cursor) {
     while (latex.length) {
       var token = latex.shift(); //pop first item
@@ -242,6 +242,11 @@ _.writeLatex = function(latex) {
           cmd = new Variable(token);
         else if (cmd = LatexCmds[token])
           cmd = new cmd;
+        else if (token == '?') {
+            cursor.insertNew(new VanillaSymbol('?'));
+            cursor.location = cursor.prev;
+          continue;
+        }
         else
           cmd = new VanillaSymbol(token);
 
@@ -258,6 +263,11 @@ _.writeLatex = function(latex) {
           cursor.insertCh(token);
       });
       cursor.insertAfter(cmd);
+    }
+    if( cursor.location ) {
+        cursor.insertAfter(cursor.location);
+        cursor.location.remove();
+        delete cursor.location;
     }
   }(this));
   return this.hide();

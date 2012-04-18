@@ -2,7 +2,8 @@
  * Commands and Operators.
  **************************/
 
-var CharCmds = {}, LatexCmds = {}; //single character commands, LaTeX commands
+var CharCmds = {}, LatexCmds = {}; Keywords = [];//single character commands, LaTeX commands, multi-character shortcuts
+var MAX_KEYWORD_LENGTH = 0;
 
 var scale, // = function(jQ, x, y) { ... }
 //will use a CSS 2D transform to scale the jQuery-wrapped HTML elements,

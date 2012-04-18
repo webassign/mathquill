@@ -44,8 +44,15 @@ $.fn.mathquill = function(cmd, latex) {
           block = data && data.block,
           cursor = block && block.cursor;
 
-        if (cursor)
+        if (cursor) {
+          if( cursor.selection && latex.match(/\?/) ) {
+              var selected = cursor.selection.latex();
+              latex = latex.replace(/\?/, selected + '?');
+          }
           cursor.writeLatex(latex).parent.blur();
+          cursor.show();
+        }
+          
       });
   case 'cmd':
     if (arguments.length > 1)
@@ -68,8 +75,21 @@ $.fn.mathquill = function(cmd, latex) {
           else
             cursor.insertCh(latex);
           cursor.hide().parent.blur();
+          cursor.show();
         }
       });
+  case 'loadKeywords':
+    if( arguments.length > 1 ) {
+      var keywords = latex;
+      Keywords = keywords.sort(function(a,b) {
+          return b.cmd.length - a.cmd.length;
+      });
+      $.each(Keywords, function(index, value){
+        if( value.re ) value.re = new RegExp( value.re );
+      });
+      MAX_KEYWORD_LENGTH = Keywords[0].cmd.length;
+      return;
+    }
   default:
     var textbox = cmd === 'textbox',
       editable = textbox || cmd === 'editable',

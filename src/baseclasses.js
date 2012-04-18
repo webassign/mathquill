@@ -140,6 +140,7 @@ _.insertAt = function(cursor) {
 
   cursor.redraw(); //this will soon be cmd.trigger('redraw')
 };
+
 _.respace = $.noop; //placeholder for context-sensitive spacing
 _.placeCursor = function(cursor) {
   //append the cursor to the first empty child, or if none empty, the last one

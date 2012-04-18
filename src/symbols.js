@@ -44,33 +44,32 @@ LatexCmds.alpha =
 LatexCmds.beta =
 LatexCmds.gamma =
 LatexCmds.delta =
+LatexCmds.epsilon =
 LatexCmds.zeta =
 LatexCmds.eta =
 LatexCmds.theta =
 LatexCmds.iota =
 LatexCmds.kappa =
+LatexCmds.lambda =
 LatexCmds.mu =
 LatexCmds.nu =
 LatexCmds.xi =
+LatexCmds.omicron =
+LatexCmds.pi =
 LatexCmds.rho =
 LatexCmds.sigma =
 LatexCmds.tau =
+LatexCmds.upsilon =
+LatexCmds.phi =
 LatexCmds.chi =
 LatexCmds.psi =
 LatexCmds.omega = proto(Symbol, function(replacedFragment, latex) {
   Variable.call(this,'\\'+latex+' ','&'+latex+';');
 });
 
-//why can't anybody FUCKING agree on these
-LatexCmds.phi = //W3C or Unicode?
-  bind(Variable,'\\phi ','&#981;');
-
 LatexCmds.phiv = //Elsevier and 9573-13
 LatexCmds.varphi = //AMS and LaTeX
   bind(Variable,'\\varphi ','&phi;');
-
-LatexCmds.epsilon = //W3C or Unicode?
-  bind(Variable,'\\epsilon ','&#1013;');
 
 LatexCmds.epsiv = //Elsevier and 9573-13
 LatexCmds.varepsilon = //AMS and LaTeX
@@ -90,7 +89,6 @@ LatexCmds.vartheta = //AMS and LaTeX
 LatexCmds.thetasym = //W3C/Unicode
   bind(Variable,'\\vartheta ','&thetasym;');
 
-LatexCmds.upsilon = //AMS and LaTeX and W3C/Unicode
 LatexCmds.upsi = //Elsevier and 9573-13
   bind(Variable,'\\upsilon ','&upsilon;');
 
@@ -108,10 +106,6 @@ LatexCmds.rhov = //Elsevier and 9573-13
 LatexCmds.varrho = //AMS and LaTeX
   bind(Variable,'\\varrho ','&#1009;');
 
-//Greek constants, look best in un-italicised Times New Roman
-LatexCmds.pi = LatexCmds['π'] = bind(NonSymbolaSymbol,'\\pi ','&pi;');
-LatexCmds.lambda = bind(NonSymbolaSymbol,'\\lambda ','&lambda;');
-
 //uppercase greek letters
 
 LatexCmds.Upsilon = //LaTeX
@@ -120,14 +114,28 @@ LatexCmds.upsih = //W3C/Unicode "upsilon with hook"
 LatexCmds.Upsih = //'cos it makes sense to me
   bind(Symbol,'\\Upsilon ','<var style="font-family: serif">&upsih;</var>'); //Symbola's 'upsilon with a hook' is a capital Y without hooks :(
 
+LatexCmds.Alpha =
+LatexCmds.Beta =
 LatexCmds.Gamma =
 LatexCmds.Delta =
+LatexCmds.Epsilon =
+LatexCmds.Zeta =
+LatexCmds.Eta =
 LatexCmds.Theta =
+LatexCmds.Iota =
+LatexCmds.Kappa =
 LatexCmds.Lambda =
+LatexCmds.Mu =
+LatexCmds.Nu =
 LatexCmds.Xi =
+LatexCmds.Omicron =
 LatexCmds.Pi =
+LatexCmds.Rho =
 LatexCmds.Sigma =
+LatexCmds.Tau =
+LatexCmds.Upsilon =
 LatexCmds.Phi =
+LatexCmds.Chi =
 LatexCmds.Psi =
 LatexCmds.Omega =
 
@@ -529,6 +537,11 @@ _.respace = function()
     '' : 'non-italicized-function';
 };
 
+function TrigFunction(replacedFragment, fn) {
+	Symbol.call(this, '\\'+fn, '<span class="trig">'+fn+'</span>');
+}
+TrigFunction.prototype = new Symbol;
+
 LatexCmds.ln =
 LatexCmds.lg =
 LatexCmds.log =
@@ -552,7 +565,7 @@ LatexCmds.lim = NonItalicizedFunction;
     LatexCmds[trig[i]+'h'] =
     LatexCmds['a'+trig[i]] = LatexCmds['arc'+trig[i]] =
     LatexCmds['a'+trig[i]+'h'] = LatexCmds['arc'+trig[i]+'h'] =
-      NonItalicizedFunction;
+      TrigFunction;
   }
 }());
 
