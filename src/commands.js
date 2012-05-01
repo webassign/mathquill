@@ -107,6 +107,9 @@ _.latex = function() {
   else
     return this.cmd + '{' + (latex || ' ') + '}';
 };
+_.allowInsertion = function(cursor) {
+    return !(cursor.parent && cursor.parent.parent instanceof SupSub && !cursor.prev);
+}
 _.redraw = function() {
   if (this.prev)
     this.prev.respace();

@@ -108,8 +108,13 @@ _.text = function() {
     return text + child.text() + (this.text_template[i] || '');
   });
 };
+_.allowInsertion = function(cursor) {
+  return true;
+};
 _.insertAt = function(cursor) {
   var cmd = this;
+
+  if (!cmd.allowInsertion(cursor)) return;
 
   cmd.parent = cursor.parent;
   cmd.next = cursor.next;
