@@ -31,7 +31,14 @@ LatexCmds.prime = CharCmds["'"] = bind(VanillaSymbol, "'", '&prime;');
 function NonSymbolaSymbol(ch, html) { //does not use Symbola font
   Symbol.call(this, ch, '<span class="nonSymbola">'+(html || ch)+'</span>');
 }
+
 NonSymbolaSymbol.prototype = Symbol.prototype;
+
+function Vector(ch, html) {
+    Symbol.call(this, ch, '<span class="vector">' + (html || ch) +  '</span>')
+}
+
+Vector.prototype = Symbol.prototype;
 
 LatexCmds['@'] = NonSymbolaSymbol;
 LatexCmds['&'] = bind(NonSymbolaSymbol, '\\&', '&');
@@ -66,6 +73,10 @@ LatexCmds.psi =
 LatexCmds.omega = proto(Symbol, function(replacedFragment, latex) {
   Variable.call(this,'\\'+latex+' ','&'+latex+';');
 });
+
+LatexCmds.ivec = bind(Vector, '\\ivec', 'i');
+LatexCmds.jvec = bind(Vector, '\\jvec', 'j');
+LatexCmds.kvec = bind(Vector, '\\kvec', 'k');
 
 LatexCmds.phiv = //Elsevier and 9573-13
 LatexCmds.varphi = //AMS and LaTeX
