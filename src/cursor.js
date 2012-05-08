@@ -266,7 +266,7 @@ _.writeLatex = function(latex) {
     }
     if( cursor.location ) {
         cursor.insertAfter(cursor.location);
-        cursor.location.remove();
+        cursor.backspace();
         delete cursor.location;
     }
   }(this));

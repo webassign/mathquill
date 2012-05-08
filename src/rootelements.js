@@ -1,7 +1,6 @@
 /*********************************************
  * Root math elements with event delegation.
  ********************************************/
-
 function createRoot(jQ, root, textbox, editable) {
   var contents = jQ.contents().detach();
 
@@ -23,7 +22,7 @@ function createRoot(jQ, root, textbox, editable) {
   root.renderLatex(contents.text());
 
   //textarea stuff
-  var textareaSpan = root.textarea = $('<span class="textarea"><textarea autocomplete="off" autocapitalize="none"></textarea></span>'),
+  var textareaSpan = root.textarea = $('<span class="textarea"><textarea autocomplete="off" autocorrect="off" autocapitalize="none"></textarea></span>'),
     textarea = textareaSpan.children();
 
   /******
@@ -41,7 +40,8 @@ function createRoot(jQ, root, textbox, editable) {
     var latex = cursor.selection ? '$'+cursor.selection.latex()+'$' : '';
     textarea.val(latex);
     if (latex) {
-      textarea[0].select();
+      textarea[0].selectionStart=0;
+      textarea[0].selectionEnd=textarea[0].value.length;
     }
   }
 
@@ -50,6 +50,63 @@ function createRoot(jQ, root, textbox, editable) {
     if (e.target !== textarea[0]) e.preventDefault();
     e.stopPropagation();
   });
+
+  //doubletop-to-select event handling
+  if ( navigator.platform.match('iPad') || navigator.platform.match('iPhone') ) {
+    jQ.doubletap(function(e){
+      e.preventDefault();
+      e = e.originalEvent.changedTouches ? e.originalEvent.changedTouches[0] : e.originalEvent;
+      if ( cursor.selection ) {
+        var sel    = cursor.selection.jQ,
+            bounds = sel.offset(),
+            x      = e.pageX,
+            y      = e.pageY;
+
+        bounds.right  = bounds.left + sel.outerWidth();
+        bounds.bottom = bounds.top + sel.outerHeight();
+
+        if( x < bounds.left || x > bounds.right || y < bounds.top || y > bounds.bottom ) {
+          ( x < bounds.left ) ? cursor.moveRight() : cursor.moveLeft();
+          anticursor = new MathFragment(cursor.parent, cursor.prev, cursor.next);
+          cursor.seek($(e.target), x, y);
+          cursor.selectFrom( anticursor );
+          return;
+        }
+
+        if ( !cursor.selection.prev && !cursor.selection.next ) {
+          cursor.selectRight();
+          return;
+        }
+
+        cursor.next = cursor.selection.next;
+        cursor.prev = cursor.next.prev;
+      } else {
+        cursor.seek( $(e.target), e.pageX, e.pageY );
+      }
+
+      while( cursor.next ) {
+        var n = cursor.next;
+        cursor.selectRight();
+        if ( n.cmd.length > 1 || (cursor.next && cursor.next.cmd.length > 1) ) break;
+      }
+
+      if ( cursor.selection ) {
+        cursor.prev = cursor.selection.prev;
+        cursor.next = cursor.prev.next;
+      }
+      while( cursor.prev ) {  
+        var p = cursor.prev;
+        cursor.selectLeft();
+        if ( p.cmd.length > 1 || (cursor.prev && cursor.prev.cmd.length > 1) ) break;
+      }
+
+      if ( cursor.selection ) {
+        cursor.next = cursor.selection.next;
+        cursor.prev = cursor.next.prev;
+      }
+
+    }, function(e){}, 300);
+  }
 
   //drag-to-select event handling
   var anticursor, blink = cursor.blink;
