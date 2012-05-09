@@ -80,24 +80,25 @@ function createRoot(jQ, root, textbox, editable) {
 
         cursor.next = cursor.selection.next;
         cursor.prev = cursor.next.prev;
+
+        while( cursor.next ) {
+          var n = cursor.next;
+          cursor.selectRight();
+          if ( n.cmd.length > 1 || (cursor.next && cursor.next.cmd.length > 1) ) break;
+        }
+
+        if ( cursor.selection ) {
+          cursor.prev = cursor.selection.prev;
+          cursor.next = cursor.prev.next;
+        }
+        while( cursor.prev ) {  
+          var p = cursor.prev;
+          cursor.selectLeft();
+          if ( p.cmd.length > 1 || (cursor.prev && cursor.prev.cmd.length > 1) ) break;
+        }
       } else {
         cursor.seek( $(e.target), e.pageX, e.pageY );
-      }
-
-      while( cursor.next ) {
-        var n = cursor.next;
-        cursor.selectRight();
-        if ( n.cmd.length > 1 || (cursor.next && cursor.next.cmd.length > 1) ) break;
-      }
-
-      if ( cursor.selection ) {
-        cursor.prev = cursor.selection.prev;
-        cursor.next = cursor.prev.next;
-      }
-      while( cursor.prev ) {  
-        var p = cursor.prev;
-        cursor.selectLeft();
-        if ( p.cmd.length > 1 || (cursor.prev && cursor.prev.cmd.length > 1) ) break;
+        ( e.pageX < cursor.offset().left ) ? cursor.selectLeft() : cursor.selectRight(); 
       }
 
       if ( cursor.selection ) {
