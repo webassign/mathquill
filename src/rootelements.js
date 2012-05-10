@@ -406,13 +406,13 @@ _.renderLatex = function(latex) {
 
   // temporarily take the element out of the displayed DOM
   // while we add stuff to it.
-  var placeholder = $('<span>');
-  this.jQ.replaceWith(placeholder);
+  //var placeholder = $('<span>');
+  //this.jQ.replaceWith(placeholder);
   this.cursor.appendTo(this).writeLatex(latex);
-  placeholder.replaceWith(this.jQ);
+  //placeholder.replaceWith(this.jQ);
 
   // XXX HACK ALERT
-  this.jQ.mathquill('redraw');
+  //this.jQ.mathquill('redraw');
   this.blur();
 };
 _.keydown = function(e)
