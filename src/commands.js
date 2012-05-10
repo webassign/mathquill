@@ -301,6 +301,14 @@ LatexCmds.langle = LatexCmds.lang = proto(Bracket, function(replacedFragment) {
   Bracket.call(this,'&lang;','&rang;','\\langle ','\\rangle ',replacedFragment);
 });
 
+LatexCmds.lopenint = proto(Bracket, function(replacedFragment) {
+  Bracket.call(this, '(', ']', '\\(', '\\]', replacedFragment);
+});
+
+LatexCmds.ropenint = proto(Bracket, function(replacedFragment) {
+  Bracket.call(this, '[', ')', '\\[', '\\)', replacedFragment);
+});
+
 // Closing bracket matching opening bracket above
 function CloseBracket(open, close, cmd, end, replacedFragment) {
   Bracket.apply(this, arguments);
