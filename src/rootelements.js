@@ -294,6 +294,9 @@ function createRoot(jQ, root, textbox, editable) {
     var text = textarea.val();
     if (text) {
       textarea.val('');
+      // sanitize the input
+      text = text.replace(/[^a-z0-9.!+\-=*/{}[\]()|<,>^_ ]/gi, '');
+      if ( !text ) return;
       for (var i = 0; i < text.length; i += 1) {
         cursor.parent.textInput(text.charAt(i));
       }
