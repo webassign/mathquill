@@ -24,7 +24,7 @@ function VanillaSymbol(ch, html) {
 }
 VanillaSymbol.prototype = Symbol.prototype;
 
-LatexCmds[':'] = CharCmds[' '] = bind(VanillaSymbol, '\\:', ' ');
+LatexCmds['space'] = CharCmds[' '] = bind(VanillaSymbol, '\\space', ' ');
 
 LatexCmds.prime = CharCmds["'"] = bind(VanillaSymbol, "'", '&prime;');
 
