@@ -309,6 +309,10 @@ LatexCmds.ropenint = proto(Bracket, function(replacedFragment) {
   Bracket.call(this, '[', ')', '\\[', '\\)', replacedFragment);
 });
 
+LatexCmds.abs = proto(Bracket, function(replacedFragment) {
+  Bracket.call(this, '|', '|', '\\right|', '\\left|', replacedFragment);
+});
+
 // Closing bracket matching opening bracket above
 function CloseBracket(open, close, cmd, end, replacedFragment) {
   Bracket.apply(this, arguments);
