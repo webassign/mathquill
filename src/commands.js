@@ -361,8 +361,7 @@ function Pipes(replacedFragment) {
 }
 _ = Pipes.prototype = new Paren;
 _.placeCursor = function(cursor) {
-  // check to see if the user is trying to close the block or trying to build a new block
-  if ((!this.prev || this.prev.cmd == '?') && !this.next && this.parent.parent && this.parent.parent.end === this.end && this.firstChild.isEmpty())
+  if (!this.next && this.parent.parent && this.parent.parent.end === this.end && this.firstChild.isEmpty())
     cursor.backspace().insertAfter(this.parent.parent);
   else
     cursor.appendTo(this.firstChild);
