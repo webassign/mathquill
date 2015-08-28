@@ -10,576 +10,272 @@ textbox, but any one HTML document can contain many such textboxes, so any one
 JS environment could actually contain many instances. */
 
 //A fake cursor in the fake textbox that the math is rendered in.
-function Cursor(root) {
-  this.parent = this.root = root;
-  var jQ = this.jQ = this._jQ = $('<span class="cursor">&zwj;</span>');
+var Cursor = P(Point, function(_) {
+  _.init = function(initParent, options) {
+    this.parent = initParent;
+    this.options = options;
 
-  //closured for setInterval
-  this.blink = function(){ jQ.toggleClass('blink'); }
-}
-_ = Cursor.prototype;
-_.prev = 0;
-_.next = 0;
-_.parent = 0;
-_.show = function() {
-  this.jQ = this._jQ.removeClass('blink');
-  if ('intervalId' in this) //already was shown, just restart interval
-    clearInterval(this.intervalId);
-  else { //was hidden and detached, insert this.jQ back into HTML DOM
-    if (this.next) {
-      if (this.selection && this.selection.prev === this.prev)
-        this.jQ.insertBefore(this.selection.jQ);
-      else
-        this.jQ.insertBefore(this.next.jQ.first());
-    }
-    else
-      this.jQ.appendTo(this.parent.jQ);
-    this.parent.focus();
-  }
-  this.intervalId = setInterval(this.blink, 500);
-  return this;
-};
-_.hide = function() {
-  if ('intervalId' in this)
-    clearInterval(this.intervalId);
-  delete this.intervalId;
-  this.jQ.detach();
-  this.jQ = $();
-  return this;
-};
-_.redraw = function() {
-  for (var ancestor = this.parent; ancestor; ancestor = ancestor.parent)
-    if (ancestor.redraw)
-      ancestor.redraw();
-};
-_.insertAt = function(parent, prev, next) {
-  var old_parent = this.parent;
+    var jQ = this.jQ = this._jQ = $('<span class="mq-cursor">&zwj;</span>');
+    //closured for setInterval
+    this.blink = function(){ jQ.toggleClass('mq-blink'); };
 
-  this.parent = parent;
-  this.prev = prev;
-  this.next = next;
+    this.upDownCache = {};
+  };
 
-  old_parent.blur(); //blur may need to know cursor's destination
-};
-_.insertBefore = function(el) {
-  this.insertAt(el.parent, el.prev, el)
-  this.parent.jQ.addClass('hasCursor');
-  this.jQ.insertBefore(el.jQ.first());
-  return this;
-};
-_.insertAfter = function(el) {
-  this.insertAt(el.parent, el, el.next);
-  this.parent.jQ.addClass('hasCursor');
-  this.jQ.insertAfter(el.jQ.last());
-  return this;
-};
-_.prependTo = function(el) {
-  this.insertAt(el, 0, el.firstChild);
-  if (el.textarea) //never insert before textarea
-    this.jQ.insertAfter(el.textarea);
-  else
-    this.jQ.prependTo(el.jQ);
-  el.focus();
-  return this;
-};
-_.appendTo = function(el) {
-  this.insertAt(el, el.lastChild, 0);
-  this.jQ.appendTo(el.jQ);
-  el.focus();
-  return this;
-};
-_.hopLeft = function() {
-  this.jQ.insertBefore(this.prev.jQ.first());
-  this.next = this.prev;
-  this.prev = this.prev.prev;
-  return this;
-};
-_.hopRight = function() {
-  this.jQ.insertAfter(this.next.jQ.last());
-  this.prev = this.next;
-  this.next = this.next.next;
-  return this;
-};
-_.moveLeft = function() {
-  if (this.selection)
-    this.insertBefore(this.selection.prev.next || this.parent.firstChild).clearSelection();
-  else {
-    if (this.prev) {
-      if (this.prev.lastChild)
-        this.appendTo(this.prev.lastChild)
-      else
-        this.hopLeft();
-    }
-    else { //we're at the beginning of a block
-      if (this.parent.prev)
-        this.appendTo(this.parent.prev);
-      else if (this.parent !== this.root)
-        this.insertBefore(this.parent.parent);
-      //else we're at the beginning of the root, so do nothing.
-    }
-  }
-  return this.show();
-};
-_.moveRight = function() {
-  if (this.selection)
-    this.insertAfter(this.selection.next.prev || this.parent.lastChild).clearSelection();
-  else {
-    if (this.next) {
-      if (this.next.firstChild)
-        this.prependTo(this.next.firstChild)
-      else
-        this.hopRight();
-    }
-    else { //we're at the end of a block
-      if (this.parent.next)
-        this.prependTo(this.parent.next);
-      else if (this.parent !== this.root)
-        this.insertAfter(this.parent.parent);
-      //else we're at the end of the root, so do nothing.
-    }
-  }
-  return this.show();
-};
-_.seek = function(target, pageX, pageY) {
-  var cursor = this.clearSelection();
-  if (target.hasClass('empty')) {
-    cursor.prependTo(target.data(jQueryDataKey).block);
-    return cursor;
-  }
-
-  var data = target.data(jQueryDataKey);
-  if (data) {
-    //if clicked a symbol, insert at whichever side is closer
-    if (data.cmd && !data.block) {
-      if (target.outerWidth() > 2*(pageX - target.offset().left))
-        cursor.insertBefore(data.cmd);
-      else
-        cursor.insertAfter(data.cmd);
-
-      return cursor;
-    }
-  }
-  //if no MathQuill data, try parent, if still no, forget it
-  else {
-    target = target.parent();
-    data = target.data(jQueryDataKey);
-    if (!data)
-      data = {block: cursor.root};
-  }
-
-  if (data.cmd)
-    cursor.insertAfter(data.cmd);
-  else
-    cursor.appendTo(data.block);
-
-  //move cursor to position closest to click
-  var dist = cursor.offset().left - pageX, prevDist;
-  do {
-    cursor.moveLeft();
-    prevDist = dist;
-    dist = cursor.offset().left - pageX;
-  }
-  while (dist > 0 && (cursor.prev || cursor.parent !== cursor.root));
-
-  if (-dist > prevDist)
-    cursor.moveRight();
-
-  return cursor;
-};
-_.offset = function() {
-  //in Opera 11.62, .getBoundingClientRect() and hence jQuery::offset()
-  //returns all 0's on inline elements with negative margin-right (like
-  //the cursor) at the end of their parent, so temporarily remove the
-  //negative margin-right when calling jQuery::offset()
-  //Opera bug DSK-360043
-  //http://bugs.jquery.com/ticket/11523
-  //https://github.com/jquery/jquery/pull/717
-  var jQ = this.jQ.removeClass('cursor'),
-    offset = jQ.offset();
-  jQ.addClass('cursor');
-  return offset;
-};
-_.writeLatex = function(latex) {
-  this.deleteSelection();
-  latex = ( latex && latex.match(/\\text\{([^}]|\\\})*\}|\\[a-z]*|&#[0-9]+;|&[a-zA-Z]+;|[^\s]/ig) ) || 0;
-  (function writeLatexBlock(cursor) {
-    while (latex.length) {
-      var token = latex.shift(); //pop first item
-      if (!token || token === '}') return;
-
-      var cmd;
-      if (token.slice(0, 6) === '\\text{') {
-        cmd = new TextBlock(token.slice(6, -1));
-        cursor.insertNew(cmd).insertAfter(cmd);
-        continue; //skip recursing through children
-      }
-      else if (token === '\\left' || token === '\\right') { //FIXME HACK: implement real \left and \right LaTeX commands, rather than special casing them here
-        token = latex.shift();
-        if (token === '\\')
-          token = latex.shift();
-
-        cursor.insertCh(token);
-        cmd = cursor.prev || cursor.parent.parent;
-
-        if (cursor.prev) //was a close-paren, so break recursion
-          return;
-        else //was an open-paren, hack to put the following latex
-          latex.unshift('{'); //in the ParenBlock in the math DOM
-      }
-      else if (/^\\[a-z]+$/i.test(token)) {
-        token = token.slice(1);
-        var cmd = LatexCmds[token];
-        if (cmd)
-          cursor.insertNew(cmd = new cmd(undefined, token));
-        else {
-          cmd = new TextBlock(token);
-          cursor.insertNew(cmd).insertAfter(cmd);
-          continue; //skip recursing through children
-        }
-      }
-      else {
-        if (token.match(/[a-eg-zA-Z]/)) //exclude f because want florin
-          cmd = new Variable(token);
-        else if (cmd = LatexCmds[token])
-          cmd = new cmd;
-        else if (token == '?') {
-            cursor.insertNew(new VanillaSymbol('?'));
-            cursor.location = cursor.prev;
-          continue;
-        }
+  _.show = function() {
+    this.jQ = this._jQ.removeClass('mq-blink');
+    if ('intervalId' in this) //already was shown, just restart interval
+      clearInterval(this.intervalId);
+    else { //was hidden and detached, insert this.jQ back into HTML DOM
+      if (this[R]) {
+        if (this.selection && this.selection.ends[L][L] === this[L])
+          this.jQ.insertBefore(this.selection.jQ);
         else
-          cmd = new VanillaSymbol(token);
-
-        cursor.insertNew(cmd);
+          this.jQ.insertBefore(this[R].jQ.first());
       }
-      cmd.eachChild(function(child) {
-        cursor.appendTo(child);
-        var token = latex.shift();
-        if (!token) return false;
-
-        if (token === '{')
-          writeLatexBlock(cursor);
-        else
-          cursor.insertCh(token);
-      });
-      cursor.insertAfter(cmd);
+      else
+        this.jQ.appendTo(this.parent.jQ);
+      this.parent.focus();
     }
-    if( cursor.location ) {
-        cursor.insertAfter(cursor.location);
-        cursor.backspace();
-        delete cursor.location;
+    this.intervalId = setInterval(this.blink, 500);
+    return this;
+  };
+  _.hide = function() {
+    if ('intervalId' in this)
+      clearInterval(this.intervalId);
+    delete this.intervalId;
+    this.jQ.detach();
+    this.jQ = $();
+    return this;
+  };
+
+  _.withDirInsertAt = function(dir, parent, withDir, oppDir) {
+    if (parent !== this.parent && this.parent.blur) this.parent.blur();
+    this.parent = parent;
+    this[dir] = withDir;
+    this[-dir] = oppDir;
+  };
+  _.insDirOf = function(dir, el) {
+    prayDirection(dir);
+    this.withDirInsertAt(dir, el.parent, el[dir], el);
+    this.parent.jQ.addClass('mq-hasCursor');
+    this.jQ.insDirOf(dir, el.jQ);
+    return this;
+  };
+  _.insLeftOf = function(el) { return this.insDirOf(L, el); };
+  _.insRightOf = function(el) { return this.insDirOf(R, el); };
+
+  _.insAtDirEnd = function(dir, el) {
+    prayDirection(dir);
+    this.withDirInsertAt(dir, el, 0, el.ends[dir]);
+    this.jQ.insAtDirEnd(dir, el.jQ);
+    el.focus();
+    return this;
+  };
+  _.insAtLeftEnd = function(el) { return this.insAtDirEnd(L, el); };
+  _.insAtRightEnd = function(el) { return this.insAtDirEnd(R, el); };
+
+  /**
+   * jump up or down from one block Node to another:
+   * - cache the current Point in the node we're jumping from
+   * - check if there's a Point in it cached for the node we're jumping to
+   *   + if so put the cursor there,
+   *   + if not seek a position in the node that is horizontally closest to
+   *     the cursor's current position
+   */
+  _.jumpUpDown = function(from, to) {
+    var self = this;
+    self.upDownCache[from.id] = Point.copy(self);
+    var cached = self.upDownCache[to.id];
+    if (cached) {
+      cached[R] ? self.insLeftOf(cached[R]) : self.insAtRightEnd(cached.parent);
     }
-  }(this));
-  return this.hide();
-};
-_.write = function(ch) {
-  return this.show().insertCh(ch);
-};
-_.insertCh = function(ch) {
-  if (this.selection) {
-    //gotta do this before this.selection is mutated by 'new cmd(this.selection)'
-    this.prev = this.selection.prev;
-    this.next = this.selection.next;
-  }
-
-  var cmd;
-  if (ch.match(/^[a-eg-zA-Z]$/)) //exclude f because want florin
-    cmd = new Variable(ch);
-  else if (cmd = CharCmds[ch] || LatexCmds[ch])
-    cmd = new cmd(this.selection, ch);
-  else
-    cmd = new VanillaSymbol(ch);
-
-  if (this.selection) {
-    if (cmd instanceof Symbol)
-      this.selection.remove();
-    delete this.selection;
-  }
-
-  return this.insertNew(cmd);
-};
-_.insertNew = function(cmd) {
-  cmd.insertAt(this);
-  return this;
-};
-_.insertCmd = function(latexCmd, replacedFragment) {
-  var cmd = LatexCmds[latexCmd];
-  if (cmd) {
-    cmd = new cmd(replacedFragment, latexCmd);
-    this.insertNew(cmd);
-    if (cmd instanceof Symbol && replacedFragment)
-      replacedFragment.remove();
-  }
-  else {
-    cmd = new TextBlock(latexCmd);
-    cmd.firstChild.focus = function(){ delete this.focus; return this; };
-    this.insertNew(cmd).insertAfter(cmd);
-    if (replacedFragment)
-      replacedFragment.remove();
-  }
-  return this;
-};
-_.unwrapGramp = function() {
-  var gramp = this.parent.parent,
-    greatgramp = gramp.parent,
-    prev = gramp.prev,
-    cursor = this;
-
-  gramp.eachChild(function(uncle) {
-    if (uncle.isEmpty()) return;
-
-    uncle.eachChild(function(cousin) {
-      cousin.parent = greatgramp;
-      cousin.jQ.insertBefore(gramp.jQ.first());
-    });
-    uncle.firstChild.prev = prev;
-    if (prev)
-      prev.next = uncle.firstChild;
-    else
-      greatgramp.firstChild = uncle.firstChild;
-
-    prev = uncle.lastChild;
-  });
-  prev.next = gramp.next;
-  if (gramp.next)
-    gramp.next.prev = prev;
-  else
-    greatgramp.lastChild = prev;
-
-  if (!this.next) { //then find something to be next to insertBefore
-    if (this.prev)
-      this.next = this.prev.next;
     else {
-      while (!this.next) {
-        this.parent = this.parent.next;
-        if (this.parent)
-          this.next = this.parent.firstChild;
-        else {
-          this.next = gramp.next;
-          this.parent = greatgramp;
+      var pageX = self.offset().left;
+      to.seek(pageX, self);
+    }
+  };
+  _.offset = function() {
+    //in Opera 11.62, .getBoundingClientRect() and hence jQuery::offset()
+    //returns all 0's on inline elements with negative margin-right (like
+    //the cursor) at the end of their parent, so temporarily remove the
+    //negative margin-right when calling jQuery::offset()
+    //Opera bug DSK-360043
+    //http://bugs.jquery.com/ticket/11523
+    //https://github.com/jquery/jquery/pull/717
+    var self = this, offset = self.jQ.removeClass('mq-cursor').offset();
+    self.jQ.addClass('mq-cursor');
+    return offset;
+  }
+  _.unwrapGramp = function() {
+    var gramp = this.parent.parent;
+    var greatgramp = gramp.parent;
+    var rightward = gramp[R];
+    var cursor = this;
+
+    var leftward = gramp[L];
+    gramp.disown().eachChild(function(uncle) {
+      if (uncle.isEmpty()) return;
+
+      uncle.children()
+        .adopt(greatgramp, leftward, rightward)
+        .each(function(cousin) {
+          cousin.jQ.insertBefore(gramp.jQ.first());
+        })
+      ;
+
+      leftward = uncle.ends[R];
+    });
+
+    if (!this[R]) { //then find something to be rightward to insLeftOf
+      if (this[L])
+        this[R] = this[L][R];
+      else {
+        while (!this[R]) {
+          this.parent = this.parent[R];
+          if (this.parent)
+            this[R] = this.parent.ends[L];
+          else {
+            this[R] = gramp[R];
+            this.parent = greatgramp;
+            break;
+          }
+        }
+      }
+    }
+    if (this[R])
+      this.insLeftOf(this[R]);
+    else
+      this.insAtRightEnd(greatgramp);
+
+    gramp.jQ.remove();
+
+    if (gramp[L].siblingDeleted) gramp[L].siblingDeleted(cursor.options, R);
+    if (gramp[R].siblingDeleted) gramp[R].siblingDeleted(cursor.options, L);
+  };
+  _.startSelection = function() {
+    var anticursor = this.anticursor = Point.copy(this);
+    var ancestors = anticursor.ancestors = {}; // a map from each ancestor of
+      // the anticursor, to its child that is also an ancestor; in other words,
+      // the anticursor's ancestor chain in reverse order
+    for (var ancestor = anticursor; ancestor.parent; ancestor = ancestor.parent) {
+      ancestors[ancestor.parent.id] = ancestor;
+    }
+  };
+  _.endSelection = function() {
+    delete this.anticursor;
+  };
+  _.select = function() {
+    var anticursor = this.anticursor;
+    if (this[L] === anticursor[L] && this.parent === anticursor.parent) return false;
+
+    // Find the lowest common ancestor (`lca`), and the ancestor of the cursor
+    // whose parent is the LCA (which'll be an end of the selection fragment).
+    for (var ancestor = this; ancestor.parent; ancestor = ancestor.parent) {
+      if (ancestor.parent.id in anticursor.ancestors) {
+        var lca = ancestor.parent;
+        break;
+      }
+    }
+    pray('cursor and anticursor in the same tree', lca);
+    // The cursor and the anticursor should be in the same tree, because the
+    // mousemove handler attached to the document, unlike the one attached to
+    // the root HTML DOM element, doesn't try to get the math tree node of the
+    // mousemove target, and Cursor::seek() based solely on coordinates stays
+    // within the tree of `this` cursor's root.
+
+    // The other end of the selection fragment, the ancestor of the anticursor
+    // whose parent is the LCA.
+    var antiAncestor = anticursor.ancestors[lca.id];
+
+    // Now we have two either Nodes or Points, guaranteed to have a common
+    // parent and guaranteed that if both are Points, they are not the same,
+    // and we have to figure out which is the left end and which the right end
+    // of the selection.
+    var leftEnd, rightEnd, dir = R;
+
+    // This is an extremely subtle algorithm.
+    // As a special case, `ancestor` could be a Point and `antiAncestor` a Node
+    // immediately to `ancestor`'s left.
+    // In all other cases,
+    // - both Nodes
+    // - `ancestor` a Point and `antiAncestor` a Node
+    // - `ancestor` a Node and `antiAncestor` a Point
+    // `antiAncestor[R] === rightward[R]` for some `rightward` that is
+    // `ancestor` or to its right, if and only if `antiAncestor` is to
+    // the right of `ancestor`.
+    if (ancestor[L] !== antiAncestor) {
+      for (var rightward = ancestor; rightward; rightward = rightward[R]) {
+        if (rightward[R] === antiAncestor[R]) {
+          dir = L;
+          leftEnd = ancestor;
+          rightEnd = antiAncestor;
           break;
         }
       }
     }
-  }
-  if (this.next)
-    this.insertBefore(this.next);
-  else
-    this.appendTo(greatgramp);
-
-  gramp.jQ.remove();
-
-  if (gramp.prev)
-    gramp.prev.respace();
-  if (gramp.next)
-    gramp.next.respace();
-};
-_.backspace = function() {
-  if (this.deleteSelection());
-  else if (this.prev) {
-    if (this.prev.isEmpty())
-      this.prev = this.prev.remove().prev;
-    else
-      this.selectLeft();
-  }
-  else if (this.parent !== this.root) {
-    if (this.parent.parent.isEmpty())
-      return this.insertAfter(this.parent.parent).backspace();
-    else
-      this.unwrapGramp();
-  }
-
-  if (this.prev)
-    this.prev.respace();
-  if (this.next)
-    this.next.respace();
-  this.redraw();
-
-  return this;
-};
-_.deleteForward = function() {
-  if (this.deleteSelection());
-  else if (this.next) {
-    if (this.next.isEmpty())
-      this.next = this.next.remove().next;
-    else
-      this.selectRight();
-  }
-  else if (this.parent !== this.root) {
-    if (this.parent.parent.isEmpty())
-      return this.insertBefore(this.parent.parent).deleteForward();
-    else
-      this.unwrapGramp();
-  }
-
-  if (this.prev)
-    this.prev.respace();
-  if (this.next)
-    this.next.respace();
-  this.redraw();
-
-  return this;
-};
-_.selectFrom = function(anticursor) {
-  //find ancestors of each with common parent
-  var oneA = this, otherA = anticursor; //one ancestor, the other ancestor
-  loopThroughAncestors: while (true) {
-    for (var oneI = this; oneI !== oneA.parent.parent; oneI = oneI.parent.parent) //one intermediate, the other intermediate
-      if (oneI.parent === otherA.parent) {
-        left = oneI;
-        right = otherA;
-        break loopThroughAncestors;
-      }
-
-    for (var otherI = anticursor; otherI !== otherA.parent.parent; otherI = otherI.parent.parent)
-      if (oneA.parent === otherI.parent) {
-        left = oneA;
-        right = otherI;
-        break loopThroughAncestors;
-      }
-
-    if (oneA.parent.parent)
-      oneA = oneA.parent.parent;
-    if (otherA.parent.parent)
-      otherA = otherA.parent.parent;
-  }
-  //figure out which is left/prev and which is right/next
-  var left, right, leftRight;
-  if (left.next !== right) {
-    for (var next = left; next; next = next.next) {
-      if (next === right.prev) {
-        leftRight = true;
-        break;
-      }
+    if (dir === R) {
+      leftEnd = antiAncestor;
+      rightEnd = ancestor;
     }
-    if (!leftRight) {
-      leftRight = right;
-      right = left;
-      left = leftRight;
-    }
-  }
-  this.hide().selection = new Selection(
-    left.parent,
-    left.prev,
-    right.next
-  );
-  this.insertAfter(right.next.prev || right.parent.lastChild);
-  this.root.selectionChanged();
-};
-_.selectLeft = function() {
-  if (this.selection) {
-    if (this.selection.prev === this.prev) { //if cursor is at left edge of selection;
-      if (this.prev) { //then extend left if possible
-        this.hopLeft().next.jQ.prependTo(this.selection.jQ);
-        this.selection.prev = this.prev;
-      }
-      else if (this.parent !== this.root) //else level up if possible
-        this.insertBefore(this.parent.parent).selection.levelUp();
-    }
-    else { //else cursor is at right edge of selection, retract left
-      this.prev.jQ.insertAfter(this.selection.jQ);
-      this.hopLeft().selection.next = this.next;
-      if (this.selection.prev === this.prev) {
-        this.deleteSelection();
-        return;
-      }
-    }
-  }
-  else {
-    if (this.prev)
-      this.hopLeft();
-    else //end of a block
-      if (this.parent !== this.root)
-        this.insertBefore(this.parent.parent);
-      else
-        return;
 
-    this.hide().selection = new Selection(this.parent, this.prev, this.next.next);
-  }
-  this.root.selectionChanged();
-};
-_.selectRight = function() {
-  if (this.selection) {
-    if (this.selection.next === this.next) { //if cursor is at right edge of selection;
-      if (this.next) { //then extend right if possible
-        this.hopRight().prev.jQ.appendTo(this.selection.jQ);
-        this.selection.next = this.next;
-      }
-      else if (this.parent !== this.root) //else level up if possible
-        this.insertAfter(this.parent.parent).selection.levelUp();
-    }
-    else { //else cursor is at left edge of selection, retract right
-      this.next.jQ.insertBefore(this.selection.jQ);
-      this.hopRight().selection.prev = this.prev;
-      if (this.selection.next === this.next) {
-        this.deleteSelection();
-        return;
-      }
-    }
-  }
-  else {
-    if (this.next)
-      this.hopRight();
-    else //end of a block
-      if (this.parent !== this.root)
-        this.insertAfter(this.parent.parent);
-      else
-        return;
+    // only want to select Nodes up to Points, can't select Points themselves
+    if (leftEnd instanceof Point) leftEnd = leftEnd[R];
+    if (rightEnd instanceof Point) rightEnd = rightEnd[L];
 
-    this.hide().selection = new Selection(this.parent, this.prev.prev, this.next);
-  }
-  this.root.selectionChanged();
-};
-_.clearSelection = function() {
-  if (this.show().selection) {
-    this.selection.clear();
-    delete this.selection;
-    this.root.selectionChanged();
-  }
-  return this;
-};
-_.deleteSelection = function() {
-  if (!this.show().selection) return false;
-
-  this.prev = this.selection.prev;
-  this.next = this.selection.next;
-  this.selection.remove();
-  delete this.selection;
-  this.root.selectionChanged();
-  return true;
-};
-
-function Selection(parent, prev, next) {
-  MathFragment.apply(this, arguments);
-}
-_ = Selection.prototype = new MathFragment;
-_.jQinit = function(children) {
-  this.jQ = children.wrapAll('<span class="selection"></span>').parent();
-    //can't do wrapAll(this.jQ = $(...)) because wrapAll will clone it
-};
-_.levelUp = function() {
-  this.clear().jQinit(this.parent.parent.jQ);
-
-  this.prev = this.parent.parent.prev;
-  this.next = this.parent.parent.next;
-  this.parent = this.parent.parent.parent;
-
-  return this;
-};
-_.clear = function() {
-  this.jQ.replaceWith(this.jQ.children());
-  return this;
-};
-_.blockify = function() {
-  this.jQ.replaceWith(this.jQ = this.jQ.children());
-  return MathFragment.prototype.blockify.call(this);
-};
-_.detach = function() {
-  var block = MathFragment.prototype.blockify.call(this);
-  this.blockify = function() {
-    this.jQ.replaceWith(block.jQ = this.jQ = this.jQ.children());
-    return block;
+    this.hide().selection = lca.selectChildren(leftEnd, rightEnd);
+    this.insDirOf(dir, this.selection.ends[dir]);
+    this.selectionChanged();
+    return true;
   };
-  return this;
-};
 
+  _.clearSelection = function() {
+    if (this.selection) {
+      this.selection.clear();
+      delete this.selection;
+      this.selectionChanged();
+    }
+    return this;
+  };
+  _.deleteSelection = function() {
+    if (!this.selection) return;
+
+    this[L] = this.selection.ends[L][L];
+    this[R] = this.selection.ends[R][R];
+    this.selection.remove();
+    this.selectionChanged();
+    delete this.selection;
+  };
+  _.replaceSelection = function() {
+    var seln = this.selection;
+    if (seln) {
+      this[L] = seln.ends[L][L];
+      this[R] = seln.ends[R][R];
+      delete this.selection;
+    }
+    return seln;
+  };
+});
+
+var Selection = P(Fragment, function(_, super_) {
+  _.init = function() {
+    super_.init.apply(this, arguments);
+    this.jQ = this.jQ.wrapAll('<span class="mq-selection"></span>').parent();
+      //can't do wrapAll(this.jQ = $(...)) because wrapAll will clone it
+  };
+  _.adopt = function() {
+    this.jQ.replaceWith(this.jQ = this.jQ.children());
+    return super_.adopt.apply(this, arguments);
+  };
+  _.clear = function() {
+    // using the browser's native .childNodes property so that we
+    // don't discard text nodes.
+    this.jQ.replaceWith(this.jQ[0].childNodes);
+    return this;
+  };
+  _.join = function(methodName) {
+    return this.fold('', function(fold, child) {
+      return fold + child[methodName]();
+    });
+  };
+});
