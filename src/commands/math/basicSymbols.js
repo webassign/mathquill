@@ -95,9 +95,6 @@ var Letter = P(Variable, function(_, super_) {
     super_.createLeftOf.apply(this, arguments);
     if (addParen) {
       LatexCmds.lparen().createLeftOf(cursor);
-      // Move the cursor to the right of where it started such that it is
-      // between the final character of the autoOp and the opening paren
-      cursor.insDirOf(R,this);
     }
   };
   _.italicize = function(bool) {
